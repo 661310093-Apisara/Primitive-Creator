@@ -1,14 +1,15 @@
 try:
-	from Pyside6 import QtCore, QtGui, QtWidgets
-	from shiboken6 import wrapInstance
-except :
-	from Pyside2 import QtCore, QtGui, QtWidgets
-	from shiboken2 import wrapInstance
+    from PySide6 import QtCore, QtGui, QtWidgets
+    from shiboken6 import wrapInstance
+except:
+    from PySide2 import QtCore, QtGui, QtWidgets
+    from shiboken2 import wrapInstance
 
 import maya.OpenMayaUI as omui
-import os
+import os,sys
+import primitiveCreator.primitiveCretorUtil as primUtil
 
-ICON_PATH = os.path.abspath(os.path.join(os.path.dirname(__filr__),'icons'))
+ICON_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'icons'))
 
 class PrimitiveCreatorDialog(QtWidgets.QDialog):
 	def __init__(self,parent=None):
@@ -20,7 +21,7 @@ class PrimitiveCreatorDialog(QtWidgets.QDialog):
 		self.main_layout = QtWidgets.QVBoxLayout()
 		self.setLayout(self.main_layout)
 
-		self.ob_listWidget = QtWidgets.QLisWidget()
+		self.ob_listWidget = QtWidgets.QListWidget()
 		self.ob_listWidget.setIconSize(QtCore.QSize(60,60))
 		self.ob_listWidget.setSpacing(5)
 		self.ob_listWidget.setViewMode(QtWidgets.QListView.IconMode)
@@ -30,7 +31,7 @@ class PrimitiveCreatorDialog(QtWidgets.QDialog):
 		self.main_layout.addWidget(self.ob_listWidget)
 
 		self.name_layout = QtWidgets.QHBoxLayout()
-		self.main_layout.addWidget(self.name_layout)
+		self.main_layout.addLayout(self.name_layout)
 		self.name_label = QtWidgets.QLabel('Name : ')
 		self.name_lineEdit = QtWidgets.QLineEdit()
 		self.name_lineEdit.setStyleSheet(
@@ -63,15 +64,23 @@ class PrimitiveCreatorDialog(QtWidgets.QDialog):
 		self.button_layout.addStretch()
 		self.button_layout.addWidget(self.create_button)
 		self.button_layout.addWidget(self.cancel_button)
+		self.cancel_button.clicked.connect(self.close)
+		self.create_button.clicked.connect(self.onCreateClicked)
 
 		self.initIconWidget()
 
 	def initIconWidget(self):
 		objs = ['cube','cone','sphere','torus']
 		for obj in objs:
-			item = QtWidgets.QLisWidgetItem(obj)
+			item = QtWidgets.QListWidgetItem(obj)
 			item.setIcon(QtGui.QIcon(os.path.join(ICON_PATH,f'{obj}.png')))
 			self.ob_listWidget.addItem(item)
+
+	def onCreateClicked(self):
+		item = self.ob_listWidget.currentItem()
+		if item:
+			prim_name = item.text()
+			primUtil.createPrimitive(prim_name)
 
 def run():
 	global ui
@@ -81,6 +90,6 @@ def run():
 	except:
 		pass
  
-	ptr= wrapInstance(int(omui.MQtUtil.mainWindow()),QtWidgets.Qwidget)
+	ptr= wrapInstance(int(omui.MQtUtil.mainWindow()),QtWidgets.QWidget)
 	ui = PrimitiveCreatorDialog(parent=ptr)
 	ui.show()
